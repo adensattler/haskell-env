@@ -1,4 +1,4 @@
-module ExamplesTwo where
+module ExamplesOne where
 
 
     -- cons operator (:) : builds lists for you
