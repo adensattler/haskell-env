@@ -1,5 +1,6 @@
 module BinaryTreeExample where
-
+    import Data.Char(isSpace)
+    
 data BinTree a = EmptyTree
                 | Leaf a 
                 | Node a (BinTree a) (BinTree a)
@@ -29,22 +30,10 @@ search value (Node v leftTree rightTree) = if value == v
             then search value leftTree
             else search value rightTree
 
+treeMap :: (a->b) -> BinTree a -> BinTree b
+treeMap f EmptyTree = EmptyTree
+treeMap f (Leaf value) = (Leaf (f value))
+treeMap f (Node value leftChild rightChild) = (Node (f value) (treeMap f leftChild) (treeMap f rightChild))
 
-data Token = BoolValueToken Bool          
-                | AndToken
-                | OrToken
-                | NotToken
-                | LeftParenToken
-                | RightParenToken
-                deriving (Show)
-lexString :: String => [Token]
-lexString [] = []
-lexString ('T':'r':'u':'e':remain) = BoolValueToken True : lexString remain
-lexString ('F':'a':'l':'s':'e':remain) = BoolValueToken False : lexString remain
-lexString ('&':'&':remain) = AndToken : lexString remain
-lexString ('|':'|':remain) = OrToken : lexString remain
-lexString ('!':remain) = NotToken : lexString remain
-lexString ('(':remain) = NotToken : lexString remain
-lexString (')':remain) = NotToken : lexString remain
-lexString (' ':remain) = lexString remain
-lexString _ = error "Syntax Error: Unrecognized Symbol"
+
+foldl :: (a -> b -> a) -> a -> [a] -> a

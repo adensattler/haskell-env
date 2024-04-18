@@ -1,0 +1,14 @@
+module MapExamples where
+
+    -- Map 
+    --   Example of a Higher Order Function
+    --   Consume a finction and aply to every element in a list
+    --   map :: (a->b) -> [a] -> [b]
+    --   Example of what is calle da functor (the list is a functor)
+
+
+    squareMap' :: [Integer] = [Integer]
+    squareMap' = map (\n -> n*n)
+
+    doubleString :: [String] -> [String]
+    doubleString = map (\s -> s++s)
