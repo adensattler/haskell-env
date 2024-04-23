@@ -36,4 +36,12 @@ treeMap f (Leaf value) = (Leaf (f value))
 treeMap f (Node value leftChild rightChild) = (Node (f value) (treeMap f leftChild) (treeMap f rightChild))
 
 
-foldl :: (a -> b -> a) -> a -> [a] -> a
+-- foldl :: (a -> b -> a) -> a -> [a] -> a
+
+
+
+instance Functor BinTree where 
+    fmap _ EmptyTree = EmptyTree
+    fmap f (Leaf value) = (Leaf (f value))
+    fmap f (Node value leftChild rightChild) = Node (f value) (fmap f leftChild) (fmap f rightChild)
+
