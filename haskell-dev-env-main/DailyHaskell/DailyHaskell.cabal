@@ -33,6 +33,7 @@ library
       Lib
       TriTree
       WeeklyHaskellOne
+      WeeklyThree
   other-modules:
       Paths_DailyHaskell
   hs-source-dirs:
@@ -119,6 +120,7 @@ test-suite DailyHaskell-test
       DailyTwoSpec
       TriTreeSpec
       WeeklyHaskellOneSpec
+      WeeklyThreeSpec
       Paths_DailyHaskell
   hs-source-dirs:
       test
