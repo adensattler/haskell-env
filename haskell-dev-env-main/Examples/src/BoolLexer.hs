@@ -8,8 +8,12 @@ module BinaryTreeExample where
                     | NotToken
                     | LeftParenToken
                     | RightParenToken
+                    | LetToken
+                    | LambdaToken
+                    | CallToken
                     | IdToken String
                     | KeywordToken String
+                    | EndToken
                     deriving (Show)
 
     -- lexString
