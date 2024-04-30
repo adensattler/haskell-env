@@ -15,14 +15,10 @@ module WeeklyThree where
         fromInteger n = Vec (repeat (fromInteger n))
 
     instance Eq Vec where
-        (==) (Vec xs) (Vec ys) = Vec and (zipWith (==) xs ys)
+        (==) (Vec xs) (Vec ys) = and (zipWith (==) xs ys)
 
     instance Ord Vec where
-        -- do i need to compare based on magnitude defined below??
-        -- (>=) (Vec xs) (Vec ys) = 
-        -- compare (Vec xs) (Vec ys) = compare xs ys
-        -- min 
-        -- max 
+        compare (Vec xs) (Vec ys) = compare xs ys
 
     class VecT a where
         magnitude :: VecT a => a -> Double
@@ -31,11 +27,9 @@ module WeeklyThree where
         magnitude (Vec xs) = sqrt (sum (map (^2) xs))
 
     instance Semigroup Vec where
-        -- put xs before <> ???
         (<>) (Vec xs) (Vec ys) = Vec (zipWith (+) xs ys)
 
-    instance Monoid Integer where
-        -- is this okay??
-        mempty = Vec [0.0]
+    instance Monoid Vec where
+        mempty = Vec (repeat 0.0)
 
 
