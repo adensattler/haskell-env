@@ -31,6 +31,7 @@ library
       DailyOne
       DailySeven
       DailySix
+      DailyTen
       DailyThree
       DailyTwo
       Lib
@@ -122,6 +123,7 @@ test-suite DailyHaskell-test
       DailyOneSpec
       DailySevenSpec
       DailySixSpec
+      DailyTenSpec
       DailyThreeSpec
       DailyTwoSpec
       TriTreeSpec
