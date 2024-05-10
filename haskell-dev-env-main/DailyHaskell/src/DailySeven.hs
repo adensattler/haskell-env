@@ -6,7 +6,6 @@ module DailySeven where
     -- Result:
     --   - The longest string in the list, or an empty string if the list is empty.
     findLongest :: [String] -> String
-    findLongest [] = ""
     findLongest = foldl (\curLongest str -> if length curLongest >= length str then curLongest else str) ""
 
 
