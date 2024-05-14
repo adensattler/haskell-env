@@ -91,12 +91,14 @@ instance MonadFail Evaluator where
   fail _ = mzero
 
 
--- TODO:
+-- DONE TODO:
 -- evaluate a literal
 evalLiteral :: Evaluator Value
 evalLiteral = do
     -- retrieve the literal value using next, and return the value
-    evalNotImplemented
+    (_, LiteralExpr x) <- next 
+    return x
+
 
 -- this evaluates a list of expressions and returns a list of values
 -- by mapping an evaluator function (using <$>) over the list of expressions
@@ -116,8 +118,10 @@ evalListOfExprs env exprs =
 evalBoolExpr :: Evaluator Value
 evalBoolExpr = do
     (env, BoolExpr op exprs) <- next
-    -- TODO: implement the remainder of the evaluation
-    evalNotImplemented
+    -- DONE TODO: implement the remainder of the evaluation
+    case calcBoolList op (evalListOfExprs env exprs) of
+        Left err -> evalError err
+        Right v -> return v
 
 
 -- performs the boolean operation on Either String Values where this works on the Values
@@ -138,12 +142,14 @@ calcBoolList op lst = case op of
     And -> boolOpFold (&&) lst
     Or -> boolOpFold (||) lst
 
-
+-- MAYBE DONE!!!
 evalMathExpr :: Evaluator Value
 evalMathExpr = do
     (env, MathExpr op exprs) <- next
     -- TODO: implement the remainder of the evaluation
-    evalNotImplemented
+    case calcMathList op(evalListOfExprs env exprs) of
+        Right v -> return v
+        Left err -> evalError err
 
 -- evaluates a comparison, specifically equals? and <
 evalCompExpr :: Evaluator Value
@@ -183,11 +189,14 @@ subValList = mathOpFoldl (-)
 -- TODO: Uncomment and Implement implement these functions to make 
 --    the other the mathematic functions work
 
--- mulValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
+mulValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
+mulValList = mathOpFoldl (*)
 
--- divValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
+divValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
+divValList = mathOpFoldl div
 
--- modValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
+modValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
+modValList = mathOpFoldl mod
 
 
 -- TODO: Add missing Math Operation types here
@@ -196,6 +205,9 @@ calcMathList ::
 calcMathList op lst = case op of
     Add -> addValList lst
     Sub -> subValList lst
+    Mul -> mulValList lst
+    Div -> divValList lst
+    Mod -> modValList lst
     _ -> error "calcMathList operation Not implemented"
 
 
@@ -226,7 +238,8 @@ evalNotExpr :: Evaluator Value
 evalNotExpr = do
     (env, NotExpr expr) <- next
     case eval evalExpr (env, expr) of
-        -- TODO resolve the different cases to evaluate NOT
+        -- FINISHED ?? TODO resolve the different cases to evaluate NOT
+        Right (BoolValue val, _) -> return (BoolValue (not val))
         _ -> failEval "not implemented"
 
 -- evaluates a Pair
@@ -251,6 +264,14 @@ evalPairExpr = do
 evalExpr :: Evaluator Value
 evalExpr =
     evalLiteral
+    <|>
+    evalBoolExpr
+    <|>
+    evalNotExpr
+    <|>
+    evalCompExpr
+    <|>
+    evalMathExpr
     <|>
     evalPairExpr
 

@@ -13,31 +13,42 @@ parseBool = do
             parseKeyword "false"
             return False
 
+-- Parse integer literals: positive or negative
+parseInt :: Parser Integer
+parseInt = read <$> (some digit <|> (:) <$> char '-' <*> some digit)
+
 
 -- parse binary bool operations
--- TODO: implement parsing bool operations which have 
+-- TODO: implement parsing bool operations which have DONE
 --   two parameters, these are 'and' and 'or'
 parseBoolOp :: Parser BoolOp
-parseBoolOp = failParse "not implemented"
+parseBoolOp = do symbol "and" >> return And 
+              <|> do symbol "or" >> return Or
     
 
 -- parse math operations and return the MathOp
--- TODO: Add the other math operations: *, div, mod
+-- DONE TODO: Add the other math operations: *, div, mod
 parseMathOp :: Parser MathOp
 parseMathOp =
     do symbol "+" >> return Add
     <|> do symbol "-" >> return Sub
+    <|> do symbol "*" >> return Mul
+    <|> do symbol "div" >> return Div
+    <|> do symbol "mod" >> return Mod
     
 
 -- parse the comparison operations and return the corresponding  CompOp
--- TODO: add the comparison operators: equal?, < 
+-- DONE TODO: add the comparison operators: equal?, < 
 parseCompOp :: Parser CompOp
-parseCompOp = failParse "not implemented"
+parseCompOp = do symbol "equal?" >> return Eq
+              <|> do symbol "<" >> return Lt
 
 -- a literal in MiniRacket is true, false, or a number
 -- TODO: parse the literals: true, false, and numbers
 literal :: Parser Value
-literal = failParse "not implemented"
+literal = BoolValue <$> parseBool
+          <|> IntValue <$> natural
+        --   <|> IntValue <$> parseInt
 
 -- parse a literal expression, which is just a literal
 literalExpr :: Parser Expr
@@ -63,17 +74,29 @@ parseKeyword keyword = do
 -- TODO: parse not expressions, note that "not" is a keyword,
 -- (HINT: you should use parseKeyword)
 notExpr :: Parser Expr
-notExpr = failParse "not implemented"
+notExpr = do
+          parseKeyword "not"
+          expr <- parseExpr
+          return (NotExpr expr)
+-- EX output: Right (NotExpr (LiteralExpr (BoolValue True)),"")
+-- parse for not and then parse for a single other expression!
 
 -- TODO: parse boolean expressions
 -- a bool expression is the operator followed by one or more expressions
 boolExpr :: Parser Expr
-boolExpr = failParse "not implemented"
+boolExpr = do 
+           op <- parseBoolOp
+           expr <- some parseExpr
+           return (BoolExpr op expr)
 
 -- TODO: parse maths expressions
 -- a math expression is the operator followed by one or more expressions
 mathExpr :: Parser Expr
-mathExpr = failParse "not implemented"
+mathExpr = do
+           op <- parseMathOp
+           expr <- some parseExpr
+           return (MathExpr op expr)
+-- mathExpr = MathExpr <$> parseMathOp <*> parseExpr
 
 -- a comparison expression is the comparison operator
 --   followed by two expressions
@@ -101,16 +124,26 @@ parseParens p = do
     symbol ")"
     return e
 
+parseAtom :: Parser Expr
+parseAtom = do
+    literalExpr
+
 -- the main parsing function which alternates between all
 -- the options you have for possible expressions
 -- TODO: Add new expression types here
+-- an atom is a literalExpr, which can be an actual literal or some other things
 parseExpr :: Parser Expr
 parseExpr = do
-    parseParens notExpr
+    -- parseAtom
+    literalExpr
+    <|> parseParens notExpr
     <|> parseParens parseExpr
+    <|> parseParens boolExpr
+    <|> parseParens mathExpr
     <|> parseParens compExpr
     <|> parseParens pairExpr
     <|> parseParens consExpr
+    
 
 
 -- a helper function for testing parsing

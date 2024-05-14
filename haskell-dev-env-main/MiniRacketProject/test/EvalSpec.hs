@@ -19,8 +19,8 @@ spec = do
         it "evaluates negative numbers: -12235" $
             evalString "-12235" `shouldBe` Right (IntValue (-12235))
         it "evaluates true" $
-            evalString "true" `shouldBe` Right (IntValue (-12235))
+            evalString "true" `shouldBe` Right (BoolValue True)
         it "evaluates false" $
-            evalString "false" `shouldBe` Right (BoolValue True)
+            evalString "false" `shouldBe` Right (BoolValue False)
         
         
