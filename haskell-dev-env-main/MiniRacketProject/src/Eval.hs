@@ -151,11 +151,6 @@ evalMathExpr = do
         Right v -> return v
         Left err -> evalError err
 
--- evaluates a comparison, specifically equals? and <
-evalCompExpr :: Evaluator Value
-evalCompExpr = do
-    -- TODO: implement the remainder of the evaluation
-    evalNotImplemented
 
 -- takes two Either Values and runs the math op on them internally, producing the same type,
 -- but failing if either of them is not an IntVal (which are the only things math ops work on)
@@ -211,6 +206,21 @@ calcMathList op lst = case op of
     _ -> error "calcMathList operation Not implemented"
 
 
+-- evaluates a comparison, specifically equals? and <
+evalCompExpr :: Evaluator Value
+evalCompExpr = do
+    -- TODO: implement the remainder of the evaluation
+    (env, CompExpr op e1 e2) <- next
+    v1 <- case eval evalExpr (env, e1) of
+        Left err -> evalError err
+        Right (val, _) -> return val
+    v2 <- case eval evalExpr (env, e2) of
+        Left err -> evalError err
+        Right (val, _) -> return val
+    case calcCompExpr op (Right v1) (Right v2) of
+        Left err -> evalError err
+        Right v -> return v
+
 {-
   A somewhat complicated implementation of calcCompExpr mainly because we have 
   so many monadic types that we have to deconstruct for the various cases. Left is
@@ -240,8 +250,9 @@ evalNotExpr = do
     case eval evalExpr (env, expr) of
         -- FINISHED ?? TODO resolve the different cases to evaluate NOT
         Right (BoolValue val, _) -> return (BoolValue (not val))
-        _ -> failEval "not implemented"
-
+        Right _ -> typeError "not <boolexpr> .. must evaluate to a bool type"
+        Left err -> evalError err
+        
 -- evaluates a Pair
 evalPairExpr :: Evaluator Value
 evalPairExpr = do

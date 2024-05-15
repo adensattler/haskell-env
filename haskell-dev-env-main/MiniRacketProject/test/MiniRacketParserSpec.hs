@@ -28,7 +28,7 @@ spec = do
         it "parses false" $
             parseString "false" `shouldBe` Right (LiteralExpr (BoolValue False), "")
 
-    -- Parsing Op Values
+    -- Parsing Operations
     describe "parse op values" $ do
         -- Bool Ops
         it "parses and" $ 
@@ -48,20 +48,47 @@ spec = do
         it "parses <" $ 
             parse parseCompOp "<" `shouldBe` Right (Lt, "")
     
+
+    -- Parse Not Expressions
     describe "parse not expr" $ do
         it "parses not true" $ 
             parse notExpr "not true" `shouldBe` Right (NotExpr (LiteralExpr (BoolValue True)),"")
-        
-        it "parses AND boolExpr alone" $ 
+    
+    --Parse Bool Expressions
+    describe "parse bool exprs" $ do
+        it "parses and boolExpr alone" $ 
             parse boolExpr "and true false" `shouldBe` Right (BoolExpr And [LiteralExpr (BoolValue True),LiteralExpr (BoolValue False)],"")
-
-        it "parses OR boolExpr alone" $ 
+        it "parses or boolExpr alone" $ 
             parse boolExpr "or true false" `shouldBe` Right (BoolExpr Or [LiteralExpr (BoolValue True),LiteralExpr (BoolValue False)],"")
-
-        it "parses AND + OR boolExprs together" $ 
+        it "parses and + or boolExprs together" $ 
             parse boolExpr "and true (or false true)" `shouldBe` Right (BoolExpr And [LiteralExpr (BoolValue True),BoolExpr Or [LiteralExpr (BoolValue False),LiteralExpr (BoolValue True)]],"")
 
-        -- DO MATH OPS AS WELL LIKE parseString "(+ 1 2)"
+
+    -- Parse Comp Expressions ('equal?' and '<')
+    describe "parse bool exprs" $ do
+        it "parses 'equal?" $ 
+            parseString "(equal? 2 2)" `shouldBe` Right (CompExpr Eq (LiteralExpr (IntValue 2)) (LiteralExpr (IntValue 2)),"")
+        it "parses <" $ 
+            parseString "(< 1 2)" `shouldBe` Right (CompExpr Lt (LiteralExpr (IntValue 1)) (LiteralExpr (IntValue 2)),"")
+
+
+    -- Parse Math Expressions
+    describe "parse math exprs" $ do
+        it "parses +" $ 
+            parseString "(+ 1 2)" `shouldBe` Right (MathExpr Add [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
+        it "parses -" $ 
+            parseString "(- 1 2)" `shouldBe` Right (MathExpr Sub [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
+        it "parses *" $ 
+            parseString "(* 1 2)" `shouldBe` Right (MathExpr Mul [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
+        it "parses div" $ 
+            parseString "(div 1 2)" `shouldBe` Right (MathExpr Div [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
+        it "parses mod" $ 
+            parseString "(mod 1 2)" `shouldBe` Right (MathExpr Mod [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
+        it "parses * (- 10 2) (+ 1 3)" $ 
+            parse mathExpr  "* (- 10 2) (+ 1 3)" `shouldBe` Right (MathExpr Mul [MathExpr Sub [LiteralExpr (IntValue 10),LiteralExpr (IntValue 2)],MathExpr Add [LiteralExpr (IntValue 1),LiteralExpr (IntValue 3)]],"")
+        it "parse mathExpr  div (* 1 2) (+ 3 4)" $
+            parse mathExpr  "div (* 1 2) (+ 3 4)" `shouldBe` Right (MathExpr Div [MathExpr Mul [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],MathExpr Add [LiteralExpr (IntValue 3),LiteralExpr (IntValue 4)]],"")
+
 
 
 
