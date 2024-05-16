@@ -28,6 +28,7 @@ spec = do
         it "parses false" $
             parseString "false" `shouldBe` Right (LiteralExpr (BoolValue False), "")
 
+
     -- Parsing Operations
     describe "parse op values" $ do
         -- Bool Ops
@@ -54,18 +55,19 @@ spec = do
         it "parses not true" $ 
             parse notExpr "not true" `shouldBe` Right (NotExpr (LiteralExpr (BoolValue True)),"")
     
+
     --Parse Bool Expressions
     describe "parse bool exprs" $ do
         it "parses and boolExpr alone" $ 
-            parse boolExpr "and true false" `shouldBe` Right (BoolExpr And [LiteralExpr (BoolValue True),LiteralExpr (BoolValue False)],"")
+            parseString "(and true false)" `shouldBe` Right (BoolExpr And [LiteralExpr (BoolValue True),LiteralExpr (BoolValue False)],"")
         it "parses or boolExpr alone" $ 
-            parse boolExpr "or true false" `shouldBe` Right (BoolExpr Or [LiteralExpr (BoolValue True),LiteralExpr (BoolValue False)],"")
+            parseString "(or true false)" `shouldBe` Right (BoolExpr Or [LiteralExpr (BoolValue True),LiteralExpr (BoolValue False)],"")
         it "parses and + or boolExprs together" $ 
-            parse boolExpr "and true (or false true)" `shouldBe` Right (BoolExpr And [LiteralExpr (BoolValue True),BoolExpr Or [LiteralExpr (BoolValue False),LiteralExpr (BoolValue True)]],"")
+            parseString "(and true (or false true))" `shouldBe` Right (BoolExpr And [LiteralExpr (BoolValue True),BoolExpr Or [LiteralExpr (BoolValue False),LiteralExpr (BoolValue True)]],"")
 
 
     -- Parse Comp Expressions ('equal?' and '<')
-    describe "parse bool exprs" $ do
+    describe "parse comp exprs" $ do
         it "parses 'equal?" $ 
             parseString "(equal? 2 2)" `shouldBe` Right (CompExpr Eq (LiteralExpr (IntValue 2)) (LiteralExpr (IntValue 2)),"")
         it "parses <" $ 
