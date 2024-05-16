@@ -140,8 +140,6 @@ parseParens p = do
 --     <|> parseParens pairExpr
 --     <|> parseParens consExpr
     
-
-
 -- a helper function for testing parsing
 --   To use simply type:
 --      parseString "5" 
@@ -155,7 +153,6 @@ parseString str = do
 
 -- Part 2:
 -- -----------------------------------------------------------------------------------
-
 -- Beginning of additions to MiniRacketParser.hs for Part 2 of the
 --   MiniRacketProject
 
@@ -193,18 +190,6 @@ ifExpr = failParse "not implemented"
 -- parenthesis, and then the body of the let expression
 letExpr :: Parser Expr
 letExpr = failParse "not implemented"
-
--- TODO: Implement lambdaExpr 
--- parse a lambda expression which is a lambda, argument, 
--- and body, with proper parenthesis around it
-lambdaExpr :: Parser Expr
-lambdaExpr = failParse "not implemented"
-
---TODO: Implement applyExpr
--- This expression consists of a function which is being applied to 
---   a parameter expression.
-applyExpr :: Parser Expr
-applyExpr = failParse "not implemented"
 
 -- TODO: Add any newly added kinds of expression to be parsed here
 -- the main parsing function which alternates between all 

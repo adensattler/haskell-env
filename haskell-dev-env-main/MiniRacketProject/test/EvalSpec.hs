@@ -29,6 +29,8 @@ spec = do
             evalString "(not true)" `shouldBe` Right (BoolValue False)
         it "evaluates (not false)" $
             evalString "(not false)" `shouldBe` Right (BoolValue True)
+        it "evaluates (not 5)" $
+            evalString "(not 5)" `shouldBe` Left (TypeError "not <boolexpr> .. must evaluate to a bool type")
     
 
     describe "eval 'and' expressions " $ do
@@ -50,7 +52,6 @@ spec = do
 
 
     describe "eval comp expressions" $ do
-        -- comp operations
         it "evaluates (< 5 2)" $
             evalString "(< 5 2)" `shouldBe` Right (BoolValue False)
         it "evaluates (< 2 5)" $
@@ -62,7 +63,6 @@ spec = do
 
 
     describe "eval math expressions" $ do
-        -- math operations
         it "evaluates (+ 5 2)" $
             evalString "(+ 5 2)" `shouldBe` Right (IntValue 7)
         it "evaluates (- 5 2)" $
