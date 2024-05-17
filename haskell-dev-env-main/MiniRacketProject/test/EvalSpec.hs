@@ -86,6 +86,11 @@ spec = do
             evalString "(if (equal? (mod 3 2) 0) true false)" `shouldBe` Right (BoolValue False)
     
 
+    describe "eval let expressions" $ do
+        it "evaluates (let (x 5) (+ x 3))" $
+            evalString "(let (x 5) (+ x 3))" `shouldBe` Right (IntValue 8)
+
+
     describe "eval var expressions" $ do
-        it "evaluates " $
-            evalString "temp" `shouldBe` 
+        it "evaluates x" $
+            evalString "x" `shouldBe` Left (NoSymbol "variable x was not found in current env")

@@ -285,10 +285,10 @@ evalExpr =
     evalLiteral
     <|>
     evalPairExpr
-    -- <|>
-    -- evalVar
-    -- <|>
-    -- evalLetExpr
+    <|>
+    evalVar
+    <|>
+    evalLetExpr
     <|>
     evalIfExpr
 
@@ -326,7 +326,23 @@ evalString = getValue . parseAndEval
 -- we evaluated the body with this new environment
 evalLetExpr :: Evaluator Value
 evalLetExpr = do
-    evalNotImplemented
+    (env, LetExpr letName argExpr body) <- next
+    -- evaluate the arg expression and extract the returned value
+    -- (essentially get the value of the new let variable)
+    case getValue (eval evalExpr (env, argExpr)) of
+        -- we got a closure from it, but it doesn't have a name, 
+        -- so let's add that to the closure as its 'funname' 
+        Right (ClosureValue "" argName funBody cenv) ->
+            let env' = Environment.bindName letName (ClosureValue letName argName funBody cenv) cenv in
+                case getValue (eval evalExpr (env', body)) of
+                    Right v -> return v
+                    Left err -> evalError err
+        -- if the result is already named, bind letName to the evaluated value
+        Right nameval ->
+            case getValue (eval evalExpr (bindName letName nameval env, body)) of
+                Right letval -> return letval
+                Left err -> evalError err
+        Left err -> evalError err
 
 -- TODO: Implement evalIfExpr
 -- Evaluate an if expression, this requires evaluating
@@ -338,14 +354,17 @@ evalLetExpr = do
 evalIfExpr :: Evaluator Value
 evalIfExpr = do
     (env, IfExpr boolexpr trueexpr falseexpr) <- next
+    -- evaluate the if statement
     case eval evalExpr (env, boolexpr) of
         Right (BoolValue val, _) -> 
             if val == True
             then 
+                -- evaluate the if true expression
                 case eval evalExpr (env, trueexpr) of
                 Right (val, _) -> return val
                 Left err -> evalError err
             else
+                -- evaluate the if false expression
                 case eval evalExpr (env, falseexpr) of
                     Right (val, _) -> return val
                     Left err -> evalError err
@@ -360,10 +379,10 @@ evalIfExpr = do
 -- via: noSymbol $ "symbol " ++ name ++ " not found"
 evalVar :: Evaluator Value
 evalVar = do 
-    (env, VarExpr var, _) <- next
+    (env, VarExpr var) <- next
     case Environment.lookup var env of
         Just v -> return v
-        Nothing -> return NoSymbol ("variable" ++ var ++ " was not found in current env")
+        Nothing -> evalError $ NoSymbol ("variable " ++ var ++ " was not found in current env")
 
 
 -- End of additions to Eval.hs for Part 2 of the MiniRacketProject
