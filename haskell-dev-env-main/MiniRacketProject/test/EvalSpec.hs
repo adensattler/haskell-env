@@ -73,5 +73,19 @@ spec = do
             evalString "(div 6 2)" `shouldBe` Right (IntValue 3)
         it "evaluates (mod 5 2)" $
             evalString "(mod 5 2)" `shouldBe` Right (IntValue 1)
-        
     
+
+    describe "eval if expressions" $ do
+        it "evaluates (if true false true)" $
+            evalString "(if true false true)" `shouldBe` Right (BoolValue False)
+        it "evaluates (if false false true)" $
+            evalString "(if false false true)" `shouldBe` Right (BoolValue True) 
+        it "evaluates (if (equal? (mod 4 2) 0) true false)" $
+            evalString "(if (equal? (mod 4 2) 0) true false)" `shouldBe` Right (BoolValue True)
+        it "evaluates (if (equal? (mod 3 2) 0) true false)" $
+            evalString "(if (equal? (mod 3 2) 0) true false)" `shouldBe` Right (BoolValue False)
+    
+
+    describe "eval var expressions" $ do
+        it "evaluates " $
+            evalString "temp" `shouldBe` 

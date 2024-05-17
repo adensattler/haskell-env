@@ -76,23 +76,55 @@ spec = do
 
     -- Parse Math Expressions
     describe "parse math exprs" $ do
-        it "parses +" $ 
+        it "parses (+ 1 2)" $ 
             parseString "(+ 1 2)" `shouldBe` Right (MathExpr Add [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
-        it "parses -" $ 
+        it "parses (- 1 2)" $ 
             parseString "(- 1 2)" `shouldBe` Right (MathExpr Sub [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
-        it "parses *" $ 
+        it "parses (* 1 2)" $ 
             parseString "(* 1 2)" `shouldBe` Right (MathExpr Mul [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
-        it "parses div" $ 
+        it "parses (div 1 2)" $ 
             parseString "(div 1 2)" `shouldBe` Right (MathExpr Div [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
-        it "parses mod" $ 
+        it "parses (mod 1 2)" $ 
             parseString "(mod 1 2)" `shouldBe` Right (MathExpr Mod [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],"")
         it "parses * (- 10 2) (+ 1 3)" $ 
             parse mathExpr  "* (- 10 2) (+ 1 3)" `shouldBe` Right (MathExpr Mul [MathExpr Sub [LiteralExpr (IntValue 10),LiteralExpr (IntValue 2)],MathExpr Add [LiteralExpr (IntValue 1),LiteralExpr (IntValue 3)]],"")
-        it "parse mathExpr  div (* 1 2) (+ 3 4)" $
-            parse mathExpr  "div (* 1 2) (+ 3 4)" `shouldBe` Right (MathExpr Div [MathExpr Mul [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],MathExpr Add [LiteralExpr (IntValue 3),LiteralExpr (IntValue 4)]],"")
+        it "parse mathExpr div (* 1 2) (+ 3 4)" $
+            parse mathExpr "div (* 1 2) (+ 3 4)" `shouldBe` Right (MathExpr Div [MathExpr Mul [LiteralExpr (IntValue 1),LiteralExpr (IntValue 2)],MathExpr Add [LiteralExpr (IntValue 3),LiteralExpr (IntValue 4)]],"")
 
 
+    -- Parse Var Expressions
+    describe "parse var exprs" $ do
+        it "parses (testVar)" $ 
+            parseString "(testVar)" `shouldBe` Right (VarExpr "testVar","")
+        it "parses var as keyword (throws error)" $ 
+            parse varExpr "not" `shouldBe` Left (ParseError "invalid variable name 'not'. variable names must not be a keyword.")
 
+
+    -- Parse Negated Variables
+    describe "parse negated var exprs" $ do
+        it "parses -testVar" $ 
+            parseString "-testVar" `shouldBe` Right (MathExpr Sub [LiteralExpr (IntValue 0),VarExpr "testVar"],"")
+        it "parses - testVar" $ 
+            parseString "- testVar" `shouldBe` Right (MathExpr Sub [LiteralExpr (IntValue 0),VarExpr "testVar"],"")
+        it "parses (< 5 -varName)" $ 
+            parseString "(< 5 -varName)" `shouldBe` Right (CompExpr Lt (LiteralExpr (IntValue 5)) (MathExpr Sub [LiteralExpr (IntValue 0),VarExpr "varName"]),"")
+        
+    
+    -- Parse If Expressions
+    describe "parse if exprs" $ do
+        it "parses (if true true true)" $ 
+            parseString "(if true true true)" `shouldBe` Right (IfExpr (LiteralExpr (BoolValue True)) (LiteralExpr (BoolValue True)) (LiteralExpr (BoolValue True)),"")
+        it "parses (if true true true)" $ 
+            parseString "(if (equal? x 5) (true) (+ x 1))" `shouldBe` Right (IfExpr (CompExpr Eq (VarExpr "x") (LiteralExpr (IntValue 5))) (LiteralExpr (BoolValue True)) (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 1)]),"")
+
+
+    -- Parse Let Expressions
+    describe "parse let exprs" $ do
+        it "parses (let (x 5) (+ x 3))" $ 
+           parseString "(let (x 5) (+ x 3))" `shouldBe` Right (LetExpr "x" (LiteralExpr (IntValue 5)) (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 3)]),"")
+        it "parses (let (x (+ z 5)) (+ k x))" $ 
+           parseString "(let (x (+ z 5)) (+ k x))" `shouldBe` Right (LetExpr "x" (MathExpr Add [VarExpr "z",LiteralExpr (IntValue 5)]) (MathExpr Add [VarExpr "k",VarExpr "x"]),"")
+       
 
 
 

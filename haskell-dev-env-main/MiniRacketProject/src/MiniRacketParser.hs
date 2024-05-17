@@ -13,10 +13,6 @@ parseBool = do
             parseKeyword "false"
             return False
 
--- Parse integer literals: positive or negative
-parseInt :: Parser Integer
-parseInt = read <$> (some digit <|> (:) <$> char '-' <*> some digit)
-
 
 -- parse binary bool operations
 -- DONE TODO: implement parsing bool operations which have DONE
@@ -48,7 +44,6 @@ parseCompOp = do symbol "equal?" >> return Eq
 literal :: Parser Value
 literal = BoolValue <$> parseBool
           <|> IntValue <$> natural
-        --   <|> IntValue <$> parseInt
 
 -- parse a literal expression, which is just a literal
 literalExpr :: Parser Expr
@@ -57,7 +52,7 @@ literalExpr = do
 
 
 keywordList :: [String]
-keywordList = ["false", "true", "not", "and", "or", "div", "mod", "equal?"]
+keywordList = ["false", "true", "not", "and", "or", "div", "mod", "equal?", "if", "let"]
 
 -- try to parse a keyword, otherwise it is a variable, this can be
 -- used to check if the identifier we see (i.e., variable name) is
@@ -160,28 +155,47 @@ parseString str = do
 --   an atom is either a var, a literal, or a negated atom
 parseAtom :: Parser Expr
 parseAtom = do
-    literalExpr
+    literalExpr <|> varExpr <|> negateAtom
 
 -- TODO: Implement negateAtom
 -- negate an atom, we actually only have one choice here. Our
 -- parsing already correctly handles negative numbers, and we
 -- cannot have negative boolean values. This leaves variables, 
--- but this needs to build a NegateExpr around the VarExpr.
+-- but this needs to build a MathExpr which produces 0 - theVariable.
 negateAtom :: Parser Expr
-negateAtom = failParse "not implemented"
+negateAtom = do
+    symbol "-"
+    atom <- parseAtom
+    return (MathExpr Sub [LiteralExpr (IntValue 0), atom])
+
+-- WACK TEST
+-- parseString "(-varName)"
+--Right (MathExpr Sub [VarExpr "varName"],"")
+    
 
 -- TODO: Implement varExpr
 -- parse a var expression, here we need to make sure that
 -- the identifier is *not* a keyword before accepting it
 -- i.e., we fail the parse if it is     
 varExpr :: Parser Expr
-varExpr = failParse "not implemented"
+varExpr = do
+    name <- identifier
+    if name `elem` keywordList
+        then failParse $ "invalid variable name '" ++ name ++ "'. variable names must not be a keyword."
+        else return (VarExpr name)
 
--- TODO: Implement ifExpr
+
+-- DONE TODO: Implement ifExpr
 -- parse an if-expression, which begins with the keyword if,
 -- and is followed by three expressions
 ifExpr :: Parser Expr
-ifExpr = failParse "not implemented"
+ifExpr = do
+    parseKeyword "if"
+    boolExpr <- parseExpr
+    thenExpr <- parseExpr
+    elseExpr <- parseExpr
+    return (IfExpr boolExpr thenExpr elseExpr)
+
 
 -- TODO: Implement let expressions  
 -- a let expression begins with the keyword let, followed by
@@ -189,7 +203,18 @@ ifExpr = failParse "not implemented"
 -- to be bound, an expression to bind to that name, and a right
 -- parenthesis, and then the body of the let expression
 letExpr :: Parser Expr
-letExpr = failParse "not implemented"
+letExpr = do
+    parseKeyword "let"
+    symbol "("
+    var <- varExpr
+    case var of
+        VarExpr argname -> do
+            argexpr <- parseExpr
+            symbol ")"
+            body <- parseExpr
+            return (LetExpr argname argexpr body)
+        _ -> failParse "expected variable name in let binding"
+
 
 -- TODO: Add any newly added kinds of expression to be parsed here
 -- the main parsing function which alternates between all 
@@ -197,6 +222,7 @@ letExpr = failParse "not implemented"
 parseExpr :: Parser Expr
 parseExpr = do
     parseAtom
+    <|> parseParens parseAtom       -- this is just for me because it makes way more sense to put a negated var in parens
     <|> parseParens notExpr
     <|> parseParens boolExpr
     <|> parseParens mathExpr
@@ -204,6 +230,9 @@ parseExpr = do
     <|> parseParens compExpr
     <|> parseParens pairExpr
     <|> parseParens consExpr 
+    <|> parseParens varExpr 
+    <|> parseParens ifExpr 
+    <|> parseParens letExpr 
 
 -- End of additions to MiniRacketParser.hs for Part 2 of the
 --   MiniRacketProject

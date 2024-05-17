@@ -289,8 +289,8 @@ evalExpr =
     -- evalVar
     -- <|>
     -- evalLetExpr
-    -- <|>
-    -- evalIfExpr
+    <|>
+    evalIfExpr
 
 -- parses the string then evaluates it
 parseAndEval :: String -> Either ErrorType (Value, (ValueEnv, Expr))
@@ -337,7 +337,21 @@ evalLetExpr = do
 -- and the 3rd expression if the test case returns false
 evalIfExpr :: Evaluator Value
 evalIfExpr = do
-    evalNotImplemented
+    (env, IfExpr boolexpr trueexpr falseexpr) <- next
+    case eval evalExpr (env, boolexpr) of
+        Right (BoolValue val, _) -> 
+            if val == True
+            then 
+                case eval evalExpr (env, trueexpr) of
+                Right (val, _) -> return val
+                Left err -> evalError err
+            else
+                case eval evalExpr (env, falseexpr) of
+                    Right (val, _) -> return val
+                    Left err -> evalError err
+        Right _ -> typeError "bool exprs MUST evaluate to a bool"
+        Left err -> evalError err
+
 
 -- TODO: implement evaluating a Var
 -- Evaluate a Var, this requires looking up the symbol
@@ -346,6 +360,10 @@ evalIfExpr = do
 -- via: noSymbol $ "symbol " ++ name ++ " not found"
 evalVar :: Evaluator Value
 evalVar = do 
-    evalNotImplemented
+    (env, VarExpr var, _) <- next
+    case Environment.lookup var env of
+        Just v -> return v
+        Nothing -> return NoSymbol ("variable" ++ var ++ " was not found in current env")
+
 
 -- End of additions to Eval.hs for Part 2 of the MiniRacketProject
