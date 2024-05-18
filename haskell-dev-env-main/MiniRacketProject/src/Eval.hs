@@ -110,6 +110,7 @@ evalListOfExprs env exprs =
             Left msg -> Left msg) <$> exprs
 
 
+
 -- evaluates a bool expression, this first evaluates all the 
 -- arguments to the bool expression and then uses calcBoolList 
 -- to calculate the boolean operation over the arguments. Note that 
@@ -122,7 +123,6 @@ evalBoolExpr = do
     case calcBoolList op (evalListOfExprs env exprs) of
         Left err -> evalError err
         Right v -> return v
-
 
 -- performs the boolean operation on Either String Values where this works on the Values
 -- only if the kinds are BoolVal, otherwise we return Left
@@ -142,14 +142,25 @@ calcBoolList op lst = case op of
     And -> boolOpFold (&&) lst
     Or -> boolOpFold (||) lst
 
--- MAYBE DONE!!!
+
+
 evalMathExpr :: Evaluator Value
 evalMathExpr = do
     (env, MathExpr op exprs) <- next
     -- TODO: implement the remainder of the evaluation
-    case calcMathList op(evalListOfExprs env exprs) of
+    case calcMathList op (evalListOfExprs env exprs) of
         Right v -> return v
         Left err -> evalError err
+
+-- DONE TODO: Add missing Math Operation types here
+calcMathList :: MathOp -> [Either ErrorType Value] -> Either ErrorType Value
+calcMathList op lst = case op of
+    Add -> addValList lst
+    Sub -> subValList lst
+    Mul -> mulValList lst
+    Div -> divValList lst
+    Mod -> modValList lst
+    -- _ -> error "calcMathList operation Not implemented"
 
 
 -- takes two Either Values and runs the math op on them internally, producing the same type,
@@ -180,10 +191,7 @@ addValList = mathOpFold (+)
 subValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
 subValList = mathOpFoldl (-)
 
-
--- TODO: Uncomment and Implement implement these functions to make 
---    the other the mathematic functions work
-
+-- DONE TODO: Uncomment and Implement implement these functions to make the other the mathematic functions work
 mulValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
 mulValList = mathOpFoldl (*)
 
@@ -194,29 +202,21 @@ modValList :: Foldable t => t (Either ErrorType Value) -> Either ErrorType Value
 modValList = mathOpFoldl mod
 
 
--- TODO: Add missing Math Operation types here
-calcMathList :: 
-    MathOp -> [Either ErrorType Value] -> Either ErrorType Value
-calcMathList op lst = case op of
-    Add -> addValList lst
-    Sub -> subValList lst
-    Mul -> mulValList lst
-    Div -> divValList lst
-    Mod -> modValList lst
-    _ -> error "calcMathList operation Not implemented"
-
 
 -- evaluates a comparison, specifically equals? and <
 evalCompExpr :: Evaluator Value
 evalCompExpr = do
-    -- TODO: implement the remainder of the evaluation
+    -- DONE TODO: implement the remainder of the evaluation
     (env, CompExpr op e1 e2) <- next
+    -- evaluate expression 1
     v1 <- case eval evalExpr (env, e1) of
         Left err -> evalError err
         Right (val, _) -> return val
+    -- evaluate expression 2
     v2 <- case eval evalExpr (env, e2) of
         Left err -> evalError err
         Right (val, _) -> return val
+    -- compare the resulting values
     case calcCompExpr op (Right v1) (Right v2) of
         Left err -> evalError err
         Right v -> return v
@@ -326,23 +326,24 @@ evalString = getValue . parseAndEval
 -- we evaluated the body with this new environment
 evalLetExpr :: Evaluator Value
 evalLetExpr = do
-    (env, LetExpr letName argExpr body) <- next
-    -- evaluate the arg expression and extract the returned value
-    -- (essentially get the value of the new let variable)
-    case getValue (eval evalExpr (env, argExpr)) of
-        -- we got a closure from it, but it doesn't have a name, 
-        -- so let's add that to the closure as its 'funname' 
-        Right (ClosureValue "" argName funBody cenv) ->
-            let env' = Environment.bindName letName (ClosureValue letName argName funBody cenv) cenv in
-                case getValue (eval evalExpr (env', body)) of
-                    Right v -> return v
-                    Left err -> evalError err
-        -- if the result is already named, bind letName to the evaluated value
-        Right nameval ->
-            case getValue (eval evalExpr (bindName letName nameval env, body)) of
-                Right letval -> return letval
-                Left err -> evalError err
+    -- get all the info from the let expression!
+    (env, LetExpr newVar varValExpr body) <- next
+
+    -- now, evaluate the varValExpr and extract the returned value
+    -- (essentially get the value of newVar!!)
+    case getValue (eval evalExpr (env, varValExpr)) of
+
+        -- if the variable value is valid (i.e. int, bool, etc), then evaluate the BODY expression
+        Right varVal ->
+            -- to eval the body, we want to use an env that is extended with our new var
+            -- hence the use of (bindName newVar varVal env) instead of env (since it returns an extended env)
+            case getValue (eval evalExpr ((Environment.bindName newVar varVal env), body)) of
+                Right letval -> return letval   -- return the final answer for the let expression
+                Left err -> evalError err       -- if there is an error, propagate the error
+        
+        -- if varValExpr was invalid, propagate the error
         Left err -> evalError err
+
 
 -- TODO: Implement evalIfExpr
 -- Evaluate an if expression, this requires evaluating
