@@ -94,6 +94,9 @@ spec = do
 
     -- Parse Var Expressions
     describe "parse var exprs" $ do
+        it "parses testVar" $ 
+            parseString "testVar" `shouldBe` Right (VarExpr "testVar","")
+        -- THIS TEST WILL FAIL UNLESS YOU EXPLICITLY PARSE "<|> parseParens parseAtom"
         it "parses (testVar)" $ 
             parseString "(testVar)" `shouldBe` Right (VarExpr "testVar","")
         it "parses var as keyword (throws error)" $ 
