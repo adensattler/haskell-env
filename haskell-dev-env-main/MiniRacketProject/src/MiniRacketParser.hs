@@ -222,7 +222,7 @@ letExpr = do
 parseExpr :: Parser Expr
 parseExpr = do
     parseAtom
-    <|> parseParens parseAtom       -- this is just for me because it makes way more sense to put a negated var in parens
+    -- <|> parseParens parseAtom       -- this is just for me because it makes way more sense to put a negated var in parens
     <|> parseParens notExpr
     <|> parseParens boolExpr
     <|> parseParens mathExpr
