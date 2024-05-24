@@ -103,6 +103,8 @@ spec = do
     describe "eval var expressions" $ do
         it "evaluates (let (x 5) (x)" $
             evalString "(let (x 5) (x))" `shouldBe` Right (IntValue 5)
+        it "evaluates (let (x 5) (-x)" $
+            evalString "(let (x 5) (-x))" `shouldBe` Right (IntValue (-5))
         it "evaluates x" $
             evalString "x" `shouldBe` Left (NoSymbol "variable x was not found in current env")
         
