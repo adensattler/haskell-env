@@ -107,4 +107,19 @@ spec = do
             evalString "(let (x 5) (-x))" `shouldBe` Right (IntValue (-5))
         it "evaluates x" $
             evalString "x" `shouldBe` Left (NoSymbol "variable x was not found in current env")
+
+
+    describe "eval lambda expressions" $ do
+        it "evaluates (lambda (x) (+ 1 1))" $
+            evalString "(lambda (x) (+ 1 1))" `shouldBe` Right (ClosureValue "" "x" (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 1)]) [])
+        it "evaluates (lambda (x) (+ x 1))" $
+            evalString "(lambda (x) (+ x 1))" `shouldBe` Right (ClosureValue "" "x" (MathExpr Add [LiteralExpr (IntValue 1),LiteralExpr (IntValue 1)]) [])
+        it "evaluates (lambda (x) 1)" $
+            evalString "(lambda (x) 1)" `shouldBe` Right (ClosureValue "" "x" (LiteralExpr (IntValue 1)) [])
+    
+    describe "eval apply expressions" $ do
+        it "evaluates ((lambda (x) (+ x 1)) 1)" $
+            evalString "((lambda (x) (+ x 1)) 1)" `shouldBe` Right (IntValue 2)
+        it "evaluates (let (f (lambda (x) (+ x 1))) (f 2))" $
+            evalString "(let (f (lambda (x) (+ x 1))) (f 2))" `shouldBe` Right (IntValue 3)
         

@@ -291,6 +291,10 @@ evalExpr =
     evalLetExpr
     <|>
     evalIfExpr
+    <|>
+    evalLambdaExpr
+    <|>
+    evalApplyExpr
 
 -- parses the string then evaluates it
 parseAndEval :: String -> Either ErrorType (Value, (ValueEnv, Expr))
@@ -314,9 +318,6 @@ evalString = getValue . parseAndEval
 
 -- Part 2:
 -- -----------------------------------------------------------------------------------
-
--- TODO: Add the following to Eval.hs for Part 2 of the MiniRacketProject
-
 -- Beginning of additions to Eval.hs for Part 2 of the MiniRacketProject
 
 -- TODO: Add this to your Eval.hs file
@@ -332,6 +333,14 @@ evalLetExpr = do
     -- now, evaluate the varValExpr and extract the returned value
     -- (essentially get the value of newVar!!)
     case getValue (eval evalExpr (env, varValExpr)) of
+
+        -- we got a closure from it, but it doesn't have a name, 
+        -- so let's add that to the closure as its 'funname' 
+        Right (ClosureValue "" argName funBody cenv) ->
+            let env' = Environment.bindName newVar (ClosureValue newVar argName funBody cenv) cenv in
+                case getValue (eval evalExpr (env', body)) of
+                    Right v -> return v
+                    Left err -> evalError err
 
         -- if the variable value is valid (i.e. int, bool, etc), then evaluate the BODY expression
         Right varVal ->
@@ -387,3 +396,72 @@ evalVar = do
 
 
 -- End of additions to Eval.hs for Part 2 of the MiniRacketProject
+
+
+
+-- Part 3:
+-- -----------------------------------------------------------------------------------
+-- Beginning of additions to Eval.hs for Part 3 of the MiniRacketProject
+
+-- TODO: Evaluate Lambda Expressions
+-- evaluate a lambda expression, which should result in a ClosureValue, 
+-- containing the function name (if there is one), formal parameter name, and body,
+-- the ClosureValue can later be used when evaluating an applyExpr. 
+-- if function is a totally anonymous function, then "" is the function name, 
+-- otherwise if it was built with a let expression, then the let name is the function name.
+evalLambdaExpr :: Evaluator Value
+evalLambdaExpr = do 
+   (env, LambdaExpr varname body) <- next
+   -- lookup env to determine if it was built with a let expr???
+   return (ClosureValue "" varname body env)
+   --NOT FINISHED ASK QUESTION ABOUT LET BEING FUNCTION NAME
+
+-- TODO: Implement callFun
+-- This is a helper function for evaluating function application expressions
+-- callFun expects a closure and a value. Inside the closure, 
+-- we find the formal parameter name (which can then be used in the function body). This
+-- name is bound to the value in the *Closure's* environment.
+-- The body of the function is then evaluated using the Closure's environment.
+--
+-- For recursion to work, 
+-- add the function name to the closure environment also (before you
+-- evaluate the expression). This ensures that recursion will work 
+-- because if it evaluates the body, it will know that the function 
+-- already exists--this call to eval will result in a complicated value
+callFun :: Value -> Value -> Either ErrorType Value
+callFun c@(ClosureValue funName argName body cenv) argVal =
+    let env = Environment.bindName argName argVal cenv -- let env = bind FORMAL PARAMETER TO ACTUAL PARAMETER VALUE IN CLOSURE ENVIRONMENT
+        env' = Environment.bindName funName c env  -- env' = bind FUNCTION NAME TO CLOSURE VALUE IN CURRENT ENVIRONMENT
+            in
+                getValue (eval evalExpr (env', body))   -- USE getValue AND eval evalExpr TO EVALUATE THE FUNCTION BODY IN THE CLOSURE ENVIRONMENT
+callFun _ _ = error "callFun must have a closure passed to it"
+
+
+-- TODO: Evaluate function application expressions
+-- Evaluate applyExpr, which is a function call to an argument. 
+-- The first expression needs to evaluate to a closure from
+-- a lambda expression or a let binding. The second expression
+-- is evaluated to give the resulting value to the function.
+-- with this, we then use the callFun function to evalute
+-- the function call
+evalApplyExpr :: Evaluator Value
+evalApplyExpr = do
+    -- get all the info from the apply expression
+    (env, ApplyExpr funExpr paramExpr) <- next
+    -- evaluate the function expression
+    case getValue (eval evalExpr (env, funExpr)) of
+        -- if it returns a closure value (ie it is a valid function)
+        Right c@(ClosureValue funName argName body cenv) ->
+            --eval the paramExpr
+            case getValue (eval evalExpr (env, paramExpr)) of
+                Right resVal -> case callFun c resVal of
+                    Right v -> return v
+                    Left err -> evalError err
+                Left err -> evalError err
+        -- if we get anything other than a closure value we need to throw an error
+        Right _ -> evalError (TypeError "apply expressions must evaluate a valid function.") 
+        -- propagate any other error
+        Left err -> evalError err
+
+
+-- End of additions to Eval.hs for Part 3 of the MiniRacketProject

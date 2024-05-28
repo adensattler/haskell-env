@@ -129,5 +129,25 @@ spec = do
            parseString "(let (x (+ z 5)) (+ k x))" `shouldBe` Right (LetExpr "x" (MathExpr Add [VarExpr "z",LiteralExpr (IntValue 5)]) (MathExpr Add [VarExpr "k",VarExpr "x"]),"")
        
 
+    -- Parse Lambda Expressions
+    describe "parse stand-alone lambda exprs" $ do 
+        it "parses (lambda (x) (+ 2 3))" $ 
+           parseString "(lambda (x) (+ 2 3))" `shouldBe` Right (LambdaExpr "x" (MathExpr Add [LiteralExpr (IntValue 2),LiteralExpr (IntValue 3)]),"")
+        it "parses (lambda (x) (lambda (y) (+ x y)))" $ 
+           parseString "(lambda (x) (lambda (y) (+ x y)))" `shouldBe` Right (LambdaExpr "x" (LambdaExpr "y" (MathExpr Add [VarExpr "x",VarExpr "y"])),"")
+        it "parses (lambda (not) (lambda (y) (+ x y)))" $ 
+           parseString "(lambda (not) (lambda (y) (+ x y)))" `shouldBe` Left (ParseError "invalid variable name 'not'. variable names must not be a keyword.")
+
+
+    -- Parse Apply Expressions
+    describe "parse apply exprs" $ do 
+        -- plain apply
+        it "parses ((lambda (x) (+ x 1)) 1)" $ 
+           parseString "((lambda (x) (+ x 1)) 1)" `shouldBe` Right (ApplyExpr (LambdaExpr "x" (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 1)])) (LiteralExpr (IntValue 1)),"")
+        -- application in let expr
+        it "parses (let (f (lambda (x) (+ x 1))) (f 2))" $ 
+           parseString "(let (f (lambda (x) (+ x 1))) (f 2))" `shouldBe` Right (LetExpr "f" (LambdaExpr "x" (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 1)])) (ApplyExpr (VarExpr "f") (LiteralExpr (IntValue 2))),"")
+
+
 
 

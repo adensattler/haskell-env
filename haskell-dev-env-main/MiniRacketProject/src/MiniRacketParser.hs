@@ -52,7 +52,7 @@ literalExpr = do
 
 
 keywordList :: [String]
-keywordList = ["false", "true", "not", "and", "or", "div", "mod", "equal?", "if", "let"]
+keywordList = ["false", "true", "not", "and", "or", "div", "mod", "equal?", "if", "let", "lambda"]
 
 -- try to parse a keyword, otherwise it is a variable, this can be
 -- used to check if the identifier we see (i.e., variable name) is
@@ -148,8 +148,7 @@ parseString str = do
 
 -- Part 2:
 -- -----------------------------------------------------------------------------------
--- Beginning of additions to MiniRacketParser.hs for Part 2 of the
---   MiniRacketProject
+-- Beginning of additions to MiniRacketParser.hs for Part 2 of the MiniRacketProject
 
 -- TODO: add the additional kinds of things that can be an atom:
 --   an atom is either a var, a literal, or a negated atom
@@ -235,6 +234,47 @@ parseExpr = do
     <|> parseParens varExpr 
     <|> parseParens ifExpr 
     <|> parseParens letExpr 
+    <|> parseParens lambdaExpr
+    <|> parseParens applyExpr
 
 -- End of additions to MiniRacketParser.hs for Part 2 of the
 --   MiniRacketProject
+
+
+-- Part 3:
+-- -----------------------------------------------------------------------------------
+-- Beginning of additions to MiniRacketParser.hs for Part 3 of the MiniRacketProject
+
+-- TODO: Implement lambdaExpr 
+-- parse a lambda expression which is a lambda, argument, 
+-- and body, with proper parenthesis around it
+lambdaExpr :: Parser Expr
+lambdaExpr = do
+    parseKeyword "lambda"
+    symbol "("
+    var <- varExpr
+    case var of
+        VarExpr varname -> do
+            symbol ")"
+            body <- parseExpr
+            return (LambdaExpr varname body)
+        _ -> failParse ("expected variable in first lambda parameter")
+-- (lambda (var) expr)
+
+
+--TODO: Implement applyExpr
+-- This expression consists of a function which is being applied to 
+--   a parameter expression.
+applyExpr :: Parser Expr
+applyExpr = do
+    func <- parseExpr -- this should be a parseExpr because it can be either a varExpr or a lambdaExpr
+    params <- parseExpr
+    return (ApplyExpr func params)
+
+
+
+-- TODO: Add lambdaExpr and applyExpr to the parseExpr function
+
+-- End of additions to MiniRacketParser.hs for Part 3 of the
+--   MiniRacketProject
+
