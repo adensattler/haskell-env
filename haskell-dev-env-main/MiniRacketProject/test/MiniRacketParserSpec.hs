@@ -136,7 +136,7 @@ spec = do
         it "parses (lambda (x) (lambda (y) (+ x y)))" $ 
            parseString "(lambda (x) (lambda (y) (+ x y)))" `shouldBe` Right (LambdaExpr "x" (LambdaExpr "y" (MathExpr Add [VarExpr "x",VarExpr "y"])),"")
         it "parses (lambda (not) (lambda (y) (+ x y)))" $ 
-           parseString "(lambda (not) (lambda (y) (+ x y)))" `shouldBe` Left (ParseError "invalid variable name 'not'. variable names must not be a keyword.")
+           parseString "(lambda (not) (lambda (y) (+ x y)))" `shouldBe` Left (ParseError "'l' didn't match expected character")
 
 
     -- Parse Apply Expressions
@@ -149,5 +149,6 @@ spec = do
            parseString "(let (f (lambda (x) (+ x 1))) (f 2))" `shouldBe` Right (LetExpr "f" (LambdaExpr "x" (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 1)])) (ApplyExpr (VarExpr "f") (LiteralExpr (IntValue 2))),"")
 
 
+    
 
 

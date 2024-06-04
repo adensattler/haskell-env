@@ -111,9 +111,9 @@ spec = do
 
     describe "eval lambda expressions" $ do
         it "evaluates (lambda (x) (+ 1 1))" $
-            evalString "(lambda (x) (+ 1 1))" `shouldBe` Right (ClosureValue "" "x" (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 1)]) [])
+            evalString "(lambda (x) (+ 1 1))" `shouldBe` Right (ClosureValue "" "x" (MathExpr Add [LiteralExpr (IntValue 1),LiteralExpr (IntValue 1)]) [])
         it "evaluates (lambda (x) (+ x 1))" $
-            evalString "(lambda (x) (+ x 1))" `shouldBe` Right (ClosureValue "" "x" (MathExpr Add [LiteralExpr (IntValue 1),LiteralExpr (IntValue 1)]) [])
+            evalString "(lambda (x) (+ x 1))" `shouldBe` Right (ClosureValue "" "x" (MathExpr Add [VarExpr "x",LiteralExpr (IntValue 1)]) [])
         it "evaluates (lambda (x) 1)" $
             evalString "(lambda (x) 1)" `shouldBe` Right (ClosureValue "" "x" (LiteralExpr (IntValue 1)) [])
     
@@ -122,4 +122,11 @@ spec = do
             evalString "((lambda (x) (+ x 1)) 1)" `shouldBe` Right (IntValue 2)
         it "evaluates (let (f (lambda (x) (+ x 1))) (f 2))" $
             evalString "(let (f (lambda (x) (+ x 1))) (f 2))" `shouldBe` Right (IntValue 3)
-        
+
+        -- (let (x 0) (let (add1 (lambda (t) (+ t 1))) (let (eqfive (lambda (s) (eq s 5))) ()) ))
+    
+    describe "evals a factorial!!!!!" $ do
+        it "evaluates fact 5" $
+            evalString "(let (fact (lambda (n) (if (< n 2) 1 (* n (fact (- n 1)))))) (fact 5))" `shouldBe` Right (IntValue 120)
+        it "evaluates fact 10" $
+            evalString "(let (fact (lambda (n) (if (< n 2) 1 (* n (fact (- n 1)))))) (fact 10))" `shouldBe` Right (IntValue 3628800)
